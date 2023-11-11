@@ -167,11 +167,8 @@ schedulers {
         priority high;
     }
     SC-VOICE {
-        ##
-        ## Warning: statement ignored: unsupported platform (ptx10001-36mr)
-        ##
-        shaping-rate percent 10;
         buffer-size percent 10;
+        transmit-rate percent 10;
         priority high;
     }
 }
