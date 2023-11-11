@@ -171,7 +171,6 @@ schedulers {
     }
     SC-VOICE {
         buffer-size percent 10;
-        transmit-rate percent 10;
         priority high;
     }
 }
