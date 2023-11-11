@@ -1,5 +1,8 @@
 # MPLS-Backbone-Class-of-Service-Use-Case
 
+## Reference Document 
+https://github.com/kashif-nawaz/MPLS-Backbone-Class-Of-Service-Design-Principles
+
 ## Use Case Requirments 
 Traffic will be marked as per following by host/ servers and respective CoS treatment is required in MPLS backbone network.
 ![cos-requirments](./images/cos-requirments.png)
