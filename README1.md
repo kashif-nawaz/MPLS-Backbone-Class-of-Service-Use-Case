@@ -84,6 +84,19 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc1           | 110000          | nc1            |     110        |
 |  nc2           | 111000          | nc2            |     111        |
 
+
+## Client ASK
+
+|Forwarding Class| DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
+|----------------| ---------------|-----------------|----------------|----------------|
+| BE             |  be            | 000000          | be             |     000        |
+| VOIP           |  ef            | 101110          | af12           |     101        |
+| Critical       |  af31          | 011010          | ef1            |     011        |
+| NC             |  nc1           | 110000          | nc1            |     110        |
+| MM             |  af41          | 100010          | af11           |     100        |
+| JUNK           |  cs1           | 001000          | be1            |     001        |
+
+
 ![cos-requirments](./images/cos-requirments.png)
 When traffic enters MPLS Backbone network from either it already have DSCP marking `
 
