@@ -88,8 +88,8 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |Forwarding Class| DSCP Alias     | DSCP Bit pattern| Remarks           |
 |----------------| ---------------|-----------------|-------------------|
 | BE             |  be            | 000000          | Best Effort       |
-| VOIP           |  ef            | 101110          |                   |
-| Critical       |  af31          | 011010          |                   |
+| VOIP           |  ef            | 101110          | VOIP Calls        |
+| Critical       |  af31          | 011010          | Business Critical |
 | NC             |  nc1           | 110000          | Network Control   |
 | MM             |  af41          | 100010          | Multimedia        |
 | JUNK           |  cs1           | 001000          | Remaining traffic |
@@ -106,68 +106,20 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 | JUNK           |  cs1           | 001000          | be1            |     001        |
 
 
+### Lab Use Case DSCP  to EXP Bit pattern Mapping 
+|Forwarding Class| DSCP Alias     | Transmit Rate   | Prioirty       | Buffer Size    |
+|----------------| ---------------|-----------------|----------------|----------------|
+| BE             |  be            | 28              | Low            |     28         |
+| VOIP           |  ef            | 10              | High           |     10         |
+| Critical       |  af31          | 50              | High           |     50         |
+| NC             |  nc1           | -               | Strict-High    |     1          |
+| MM             |  af41          | 10              | Medimum-Low    |     10         |
+| JUNK           |  cs1           | 2               | Low            |     1          |
 
-![cos-requirments](./images/cos-requirments.png)
-When traffic enters MPLS Backbone network from either it already have DSCP marking `
 
-## Interfaces Queue Resources 
-Following queue resources is agreed.
-
-![queue-resource](./images/queue-resources.png)
-
-## Mapping from DSCP to EXP Code Points 
-DSCP to EXP mapping is required. 
-![dscp-to-exp-mapping](./images/dscp-exp-mapping.png)
-
-## Lab Topology 
-
-![lab-topology](./images/)
-
-## Implmentation Details 
-Hence marking is done at host level so on CE ingress interface we will apply behavioral aggregated classification using DSCP classifier. CE will forward IP packets by honoring DSCP marking done by host but on CE egress interfaces queues , traffic will receive required treatment i.e transmit rate and buffer size etc. Once traffic will enter ingress it will be classified using DSCP classifier and EXP rewrite rules will be applied on ingress PE egress interfaces. On LSR (P routers) EXP classifier will be applied and EXP rewrite rule will be applied. Once traffic will enter egress PEs , it will be classified using EXP classifier and egress PEs will forward traffic to egress CE. On egress CE traffic will be classified using DSCP classifier and traffic will exit towards destination host. Following config will be applie on CEs / PEs and P routers. 
-
+## Forwarding Classes Defination
 ```
-classifiers {
-    dscp CL-COS {
-        import default;
-        forwarding-class BEST-EFFORT {
-            loss-priority low code-points be;
-        }
-        forwarding-class MISSION-CRITICAL {
-            loss-priority low code-points af31;
-        }
-        forwarding-class NETWORK-CONTROL {
-            loss-priority low code-points nc1;
-        }
-        forwarding-class SCAVENGER {
-            loss-priority low code-points cs1;
-        }
-        forwarding-class VIDEO {
-            loss-priority low code-points af41;
-        }
-        forwarding-class VOICE {
-            loss-priority low code-points ef;
-        }
-    }
-    exp CL-EXP-COS {
-        import default;
-        forwarding-class BEST-EFFORT {
-            loss-priority low code-points be;
-        }
-        forwarding-class NETWORK-CONTROL {
-            loss-priority low code-points nc1;
-        }
-        forwarding-class SCAVENGER {
-            loss-priority low code-points be1;
-        }
-        forwarding-class VIDEO {
-            loss-priority low code-points af11;
-        }
-        forwarding-class VOICE {
-            loss-priority low code-points af12;
-        }
-    }
-}
+class-of-service {
 forwarding-classes {
     class BEST-EFFORT queue-num 0;
     class MISSION-CRITICAL queue-num 2;
@@ -176,67 +128,12 @@ forwarding-classes {
     class VIDEO queue-num 4;
     class VOICE queue-num 1;
 }
-interfaces {
-    et-* {
-        scheduler-map SM-COS;
-        unit * {
-            classifiers {
-                dscp CL-COS;
-                exp CL-EXP-COS;
-            }
-            rewrite-rules {
-                exp DSCP-EXP-REWRITE;
-            }
-        }
-    }
-    xe-* {
-        scheduler-map SM-COS;
-        unit * {
-            classifiers {
-                dscp CL-COS;
-                exp CL-EXP-COS;
-            }
-            rewrite-rules {
-                exp DSCP-EXP-REWRITE;
-            }
-        }
-    }
-    ae* {
-        scheduler-map SM-COS;
-        unit * {
-            classifiers {
-                dscp CL-COS;
-                exp CL-EXP-COS;
-            }
-            rewrite-rules {
-                exp DSCP-EXP-REWRITE;
-            }
-        }
-    }
 }
-rewrite-rules {
-    exp DSCP-EXP-REWRITE {
-        import default;
-        forwarding-class BEST-EFFORT {
-            loss-priority low code-point be;
-        }
-        forwarding-class MISSION-CRITICAL {
-            loss-priority low code-point ef1;
-        }
-        forwarding-class NETWORK-CONTROL {
-            loss-priority low code-point nc1;
-        }
-        forwarding-class SCAVENGER {
-            loss-priority low code-point be1;
-        }
-        forwarding-class VIDEO {
-            loss-priority low code-point af11;
-        }
-        forwarding-class VOICE {
-            loss-priority low code-point af12;
-        }
-    }
-}
+```
+## Schduler MAP
+
+```
+class-of-service {
 scheduler-maps {
     SM-COS {
         forwarding-class BEST-EFFORT scheduler SC-BEST-EFFORT;
@@ -277,4 +174,136 @@ schedulers {
         priority high;
     }
 }
+}
 ```
+
+## Multifield Classification At Edge Interfaces 
+If traffic received at the ingress LSR edge interfaces is not properly marked with the DSCP bit, or if we want to change those markings, we can apply a multifield classifier. Multifield classifier matches source and destination prefixes and sets the forwarding class as an action item in the firewall filter configuration.
+
+## BA Classfication At Edge Interfaces
+```
+class-of-service {
+classifiers {
+    dscp CL-COS {
+        import default;
+        forwarding-class BEST-EFFORT {
+            loss-priority low code-points be;
+        }
+        forwarding-class MISSION-CRITICAL {
+            loss-priority low code-points af31;
+        }
+        forwarding-class NETWORK-CONTROL {
+            loss-priority low code-points nc1;
+        }
+        forwarding-class SCAVENGER {
+            loss-priority low code-points cs1;
+        }
+        forwarding-class VIDEO {
+            loss-priority low code-points af41;
+        }
+        forwarding-class VOICE {
+            loss-priority low code-points ef;
+        }
+    }
+}
+}
+```
+## DSCP to EXP Rewrite Rule
+
+```
+class-of-service {
+rewrite-rules {
+    exp DSCP-EXP-REWRITE {
+        import default;
+        forwarding-class BEST-EFFORT {
+            loss-priority low code-point be;
+        }
+        forwarding-class MISSION-CRITICAL {
+            loss-priority low code-point ef1;
+        }
+        forwarding-class NETWORK-CONTROL {
+            loss-priority low code-point nc1;
+        }
+        forwarding-class SCAVENGER {
+            loss-priority low code-point be1;
+        }
+        forwarding-class VIDEO {
+            loss-priority low code-point af11;
+        }
+        forwarding-class VOICE {
+            loss-priority low code-point af12;
+        }
+    }
+}
+}
+```
+## EXP Classfier
+```
+class-of-service {
+    exp CL-EXP-COS {
+        import default;
+        forwarding-class BEST-EFFORT {
+            loss-priority low code-points be;
+        }
+        forwarding-class NETWORK-CONTROL {
+            loss-priority low code-points nc1;
+        }
+        forwarding-class SCAVENGER {
+            loss-priority low code-points be1;
+        }
+        forwarding-class VIDEO {
+            loss-priority low code-points af11;
+        }
+        forwarding-class VOICE {
+            loss-priority low code-points af12;
+        }
+    }
+}
+```
+
+## Applying Everything to Interfaces
+
+```
+class-of-service {
+interfaces {
+    et-* {
+        scheduler-map SM-COS;
+        unit * {
+            classifiers {
+                dscp CL-COS;
+                exp CL-EXP-COS;
+            }
+            rewrite-rules {
+                exp DSCP-EXP-REWRITE;
+            }
+        }
+    }
+    xe-* {
+        scheduler-map SM-COS;
+        unit * {
+            classifiers {
+                dscp CL-COS;
+                exp CL-EXP-COS;
+            }
+            rewrite-rules {
+                exp DSCP-EXP-REWRITE;
+            }
+        }
+    }
+    ae* {
+        scheduler-map SM-COS;
+        unit * {
+            classifiers {
+                dscp CL-COS;
+                exp CL-EXP-COS;
+            }
+            rewrite-rules {
+                exp DSCP-EXP-REWRITE;
+            }
+        }
+    }
+}
+}
+```
+
+
