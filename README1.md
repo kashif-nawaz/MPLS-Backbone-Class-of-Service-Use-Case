@@ -8,9 +8,10 @@ Designing and deploying Class of Service (CoS) in an MPLS backbone network is in
 
 Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface via IP lookup. At this stage, it may be necessary to rewrite the Differentiated Services Code Point (DSCP) bits to maintain consistent traffic classification and prioritization at the CE routers.
 
-As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values).
+## DSCP to EXP Mapping 
+As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values). Although IETF RFC 4594 describes 21 DSCP values but Junos has adapted 2 additional values i.e CS1 (defined in RFC 2474) and CS6  (defined in RFC 2474) 
 
-## DSCP Alias Bit pattern
+### Junos DSCP Alias Bit pattern
 
 | Alias     | Bit pattern|
 | ----------|------------|
@@ -38,7 +39,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc1      | 110000     |    
 |  nc2      | 111000     |
 
-## EXP Alias Bit pattern
+### Junos EXP Alias Bit pattern
 
 | Alias     | Bit pattern|
 | ----------|------------|
@@ -54,9 +55,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc2      |   111      |
 
 
-## DSCP to EXP  Bit pattern Mapping 
-
-
+### DSCP to EXP  Bit pattern Mapping 
 
 | DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 | ---------------|-----------------|----------------|----------------|
@@ -85,8 +84,18 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc2           | 111000          | nc2            |     111        |
 
 
-## Client ASK
+### Lab Use Case DSCP  Bit pattern Mapping 
+|Forwarding Class| DSCP Alias     | DSCP Bit pattern| Remarks           |
+|----------------| ---------------|-----------------|-------------------|
+| BE             |  be            | 000000          | Best Effort       |
+| VOIP           |  ef            | 101110          |                   |
+| Critical       |  af31          | 011010          |                   |
+| NC             |  nc1           | 110000          | Network Control   |
+| MM             |  af41          | 100010          | Multimedia        |
+| JUNK           |  cs1           | 001000          | Remaining traffic |
 
+
+### Lab Use Case DSCP  to EXP Bit pattern Mapping 
 |Forwarding Class| DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 |----------------| ---------------|-----------------|----------------|----------------|
 | BE             |  be            | 000000          | be             |     000        |
@@ -95,6 +104,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 | NC             |  nc1           | 110000          | nc1            |     110        |
 | MM             |  af41          | 100010          | af11           |     100        |
 | JUNK           |  cs1           | 001000          | be1            |     001        |
+
 
 
 ![cos-requirments](./images/cos-requirments.png)
