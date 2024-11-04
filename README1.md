@@ -10,7 +10,7 @@ Once traffic enters the egress LSR, the MPLS label is removed, and the traffic i
 
 As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values).
 
-
+## DSCP Alias Bit pattern
 
 | Alias     | Bit pattern|
 | ----------|------------|
@@ -38,6 +38,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc1      | 110000     |    
 |  nc2      | 111000     |
 
+## EXP Alias Bit pattern
 
 | Alias     | Bit pattern|
 | ----------|------------|
@@ -53,7 +54,35 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc2      |   111      |
 
 
+## DSCP to EXP  Bit pattern Mapping 
 
+
+
+| DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
+| ---------------|-----------------|----------------|-----------------|
+|  af11          | 001010          | be1                 001
+|  af12          | 001100          | be1                 001   
+|  af13          | 001110          | be1                 001 
+|  af21          | 010010          | ef                  010
+|  af22          | 010100          | ef                  010  
+|  af23          | 010110          | ef                  010  
+|  af31          | 011010          | ef1                 011 
+|  af32          | 011100          | ef1                 011   
+|  af33          | 011110          | ef1                 011   
+|  af41          | 100010          | af11                100  
+|  af42          | 100100          | af11                100   
+|  af43          | 100110          | af11                100    
+|  be            | 000000          | be                  000  
+|  cs1           | 001000          | be1                 001 
+|  cs2           | 010000          | ef                  010   
+|  cs3           | 011000          | ef1                 011   
+|  cs4           | 100000          | ef1                 011  
+|  cs5           | 101000          | af12                101    
+|  cs6           | 110000          | cs6                 110   
+|  cs7           | 111000          | nc2                 111   
+|  ef            | 101110          | af12                101   
+|  nc1           | 110000          | nc1                 110  
+|  nc2           | 111000          | nc2                 111
 
 ![cos-requirments](./images/cos-requirments.png)
 When traffic enters MPLS Backbone network from either it already have DSCP marking `
