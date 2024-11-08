@@ -264,13 +264,16 @@ firewall {
 ```
 
 ## BA Classfication At Edge Interfaces
+
+If traffic is already marked with DSCP bits, the Behavior Aggregate (BA) classifier will map the traffic to the corresponding forwarding class by matching the appropriate DSCP alias code.
+
 ```
 class-of-service {
 classifiers {
     dscp CL_COS {
         import default;
         forwarding-class BE {
-            loss-priority low code-points be;
+            loss-priority medium-low code-points be;
         }
         forwarding-class CRITICAL {
             loss-priority low code-points af31;
@@ -279,10 +282,10 @@ classifiers {
             loss-priority low code-points nc1;
         }
         forwarding-class JUNK {
-            loss-priority low code-points cs1;
+            loss-priority high code-points cs1;
         }
         forwarding-class MM {
-            loss-priority low code-points af41;
+            loss-priority medium-high code-points af41;
         }
         forwarding-class VOIP {
             loss-priority low code-points ef;
@@ -291,8 +294,8 @@ classifiers {
 }
 }
 ```
-## DSCP to EXP Rewrite Rule
-
+## EXP Rewrite Rule
+Traffic leaving the egress interfaces of the ingress or transit LSR will be marked according to the EXP rewrite rule, with code point aliases chosen based on the DSCP-to-EXP bit mapping described above.
 ```
 class-of-service {
 rewrite-rules {
@@ -321,6 +324,8 @@ rewrite-rules {
 }
 ```
 ## EXP Classfier
+On the transit LSR, an EXP classifier will be applied on each ingress interface to classify incoming traffic based on the EXP bits already marked.
+
 ```
 class-of-service {
     exp CL_EXP_COS {
@@ -345,6 +350,8 @@ class-of-service {
 ```
 
 ## Applying Everything to Interfaces
+
+Finally, we need to apply the scheduler map, rewrite rules, and BA classifiers on all interfaces.
 
 ```
 class-of-service {
