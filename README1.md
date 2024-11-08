@@ -107,21 +107,21 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 
 
 ### Lab Use Case DSCP  to EXP Bit pattern Mapping 
-|Forwarding Class| DSCP Alias     | Transmit Rate   | Prioirty       | Buffer Size    |
-|----------------| ---------------|-----------------|----------------|----------------|
-| BE             |  be            | 28              | Low            |     28         |
-| VOIP           |  ef            | 10              | High           |     10         |
-| Critical       |  af31          | 50              | High           |     50         |
-| NC             |  nc1           | -               | Strict-High    |     1          |
-| MM             |  af41          | 10              | Medimum-Low    |     10         |
-| JUNK           |  cs1           | 2               | Low            |     1          |
+|Forwarding Class| DSCP Alias     | Transmit Rate   | Prioirty       | Buffer Size    |Queue Number    |
+|----------------| ---------------|-----------------|----------------|----------------|----------------|
+| BE             |  be            | 28              | Low            |     28         |  0             |
+| VOIP           |  ef            | 10              | High           |     10         |  1             |
+| Critical       |  af31          | 50              | High           |     50         |  2             |
+| NC             |  nc1           | -               | Strict-High    |     1          |  3             |
+| MM             |  af41          | 10              | Medimum-Low    |     10         |  4             |
+| JUNK           |  cs1           | 2               | Low            |     1          |  5             |
 
 
 ## Forwarding Classes Defination
 ```
 class-of-service {
 forwarding-classes {
-    class BEqueue-num 0;
+    class BE queue-num 0;
     class CRITICAL queue-num 2;
     class NC queue-num 3;
     class JUNK queue-num 5;
@@ -268,9 +268,9 @@ firewall {
 ```
 class-of-service {
 classifiers {
-    dscp CL-COS {
+    dscp CL_COS {
         import default;
-        forwarding-class BE{
+        forwarding-class BE {
             loss-priority low code-points be;
         }
         forwarding-class CRITICAL {
@@ -299,7 +299,7 @@ class-of-service {
 rewrite-rules {
     exp DSCP_EXP_REWRITE {
         import default;
-        forwarding-class BE{
+        forwarding-class BE {
             loss-priority low code-point be;
         }
         forwarding-class CRITICAL {
