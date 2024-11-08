@@ -55,7 +55,9 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc2      |   111      |
 
 
-### DSCP to EXP  Bit pattern Mapping 
+### SCHEME for DSCP to EXP  Bit pattern Mapping 
+
+The three most significant bits (MSBs) of the DSCP alias code will be used to represent the EXP alias code. This mapping allows the 23 DSCP alias codes to correspond to 10 EXP alias codes.
 
 | DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 | ---------------|-----------------|----------------|----------------|
@@ -84,18 +86,18 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc2           | 111000          | nc2            |     111        |
 
 
-### Lab Use Case DSCP  Bit pattern Mapping 
-|Forwarding Class| DSCP Alias     | DSCP Bit pattern| Remarks           |
-|----------------| ---------------|-----------------|-------------------|
-| BE             |  be            | 000000          | Best Effort       |
-| VOIP           |  ef            | 101110          | VOIP Calls        |
-| Critical       |  af31          | 011010          | Business Critical |
-| NC             |  nc1           | 110000          | Network Control   |
-| MM             |  af41          | 100010          | Multimedia        |
-| JUNK           |  cs1           | 001000          | Remaining traffic |
+### Forwarding Classes Resources Mapping
+|Forwarding Class| DSCP Alias     | DSCP Bit pattern|Queue Number    | Transmit Rate   | Prioirty       | Buffer Size    | Remarks           |
+|----------------| ---------------|-----------------|----------------|-----------------|----------------|----------------|-------------------|
+| BE             |  be            | 000000          | 0              | 28              | Low            |     28         | Best Effort       |
+| VOIP           |  ef            | 101110          | 1              | 10              | High           |     10         | VOIP              |
+| Critical       |  af31          | 011010          | 2              | 50              | High           |     50         | Business Critical |
+| NC             |  nc1           | 110000          | 3              | -               | Strict-High    |     1          | Network Control   |
+| MM             |  af41          | 100010          | 4              | 10              | Medimum-Low    |     10         | Multimedia        |
+| JUNK           |  cs1           | 001000          | 5              | 2               | Low            |     1          | Remaining traffic |
 
 
-### Lab Use Case DSCP  to EXP Bit pattern Mapping 
+### DSCP to EXP Bit pattern Mapping 
 |Forwarding Class| DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 |----------------| ---------------|-----------------|----------------|----------------|
 | BE             |  be            | 000000          | be             |     000        |
@@ -106,15 +108,6 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 | JUNK           |  cs1           | 001000          | be1            |     001        |
 
 
-### Lab Use Case DSCP  to EXP Bit pattern Mapping 
-|Forwarding Class| DSCP Alias     | Transmit Rate   | Prioirty       | Buffer Size    |Queue Number    |
-|----------------| ---------------|-----------------|----------------|----------------|----------------|
-| BE             |  be            | 28              | Low            |     28         |  0             |
-| VOIP           |  ef            | 10              | High           |     10         |  1             |
-| Critical       |  af31          | 50              | High           |     50         |  2             |
-| NC             |  nc1           | -               | Strict-High    |     1          |  3             |
-| MM             |  af41          | 10              | Medimum-Low    |     10         |  4             |
-| JUNK           |  cs1           | 2               | Low            |     1          |  5             |
 
 
 ## Forwarding Classes Defination
@@ -146,30 +139,31 @@ scheduler-maps {
 }
 schedulers {
     SCH_BE {
-        transmit-rate percent 70;
-        buffer-size percent 70;
+        transmit-rate percent 28;
+        buffer-size percent 28;
         priority low;
     }
     SCH_CRITICAL {
-        transmit-rate percent 5;
-        buffer-size percent 5;
+        transmit-rate percent 50;
+        buffer-size percent 50;
         priority high;
     }
     SCH_NC {
-        buffer-size percent 5;
+        buffer-size percent 1;
         priority strict-high;
     }
     SCH_JUNK {
-        transmit-rate percent 5;
-        buffer-size percent 5;
+        transmit-rate percent 1;
+        buffer-size percent 1;
         priority low;
     }
     SCH_MM {
-        transmit-rate percent 5;
-        buffer-size percent 5;
+        transmit-rate percent 10;
+        buffer-size percent 10;
         priority high;
     }
     SCH_VOIP {
+        buffer-size percent 10;
         buffer-size percent 10;
         priority high;
     }
