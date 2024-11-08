@@ -180,6 +180,90 @@ schedulers {
 ## Multifield Classification At Edge Interfaces 
 If traffic received at the ingress LSR edge interfaces is not properly marked with the DSCP bit, or if we want to change those markings, we can apply a multifield classifier. Multifield classifier matches source and destination prefixes and sets the forwarding class as an action item in the firewall filter configuration.
 
+```
+firewall {
+    family inet {
+        filter mf_classfier {
+            term BE {
+                from {
+                    source-address {
+                        10.0.10.0/24;
+                    }
+                    destination-address {
+                        10.0.11.0/24;
+                    }
+                }
+                then {
+                    forwarding-class BE;
+                    dscp be;
+                     accept;
+                }
+            }
+            term VOIP {
+                from {
+                    source-address {
+                        10.0.20.0/24;
+                    }
+                    destination-address {
+                        10.0.21.0/24;
+                    }
+                }
+                then {
+                    forwarding-class VOICE;
+                    dscp ef;
+                    accept;
+                }
+            }
+            term Critical {
+                from {
+                    source-address {
+                        10.0.30.0/24;
+                    }
+                    destination-address {
+                        10.0.31.0/24;
+                    }
+                }
+                then {
+                    forwarding-class Critical;
+                    dscp af31;
+                    accept;
+                }
+            }
+            term MM {
+                from {
+                    source-address {
+                        10.0.30.0/24;
+                    }
+                    destination-address {
+                        10.0.31.0/24;
+                    }
+                }
+                then {
+                    forwarding-class MM;
+                    dscp af41;
+                    accept;
+                }
+            }
+            term JUNK {
+                from {
+                    source-address {
+                       0.0.0.0/0;
+                    }
+                    destination-address {
+                        0.0.0.0/0;
+                    }
+                }
+                then {
+                    forwarding-class JUNK;
+                    dscp cs1;
+                    accept;
+                }
+            }
+        }
+    }
+}
+```
+
 ## BA Classfication At Edge Interfaces
 ```
 class-of-service {
