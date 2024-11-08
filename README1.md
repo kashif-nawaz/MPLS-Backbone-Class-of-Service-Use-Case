@@ -196,7 +196,8 @@ firewall {
                 then {
                     forwarding-class BE;
                     dscp be;
-                     accept;
+                    loss-priority medium-low;
+                    accept;
                 }
             }
             term VOIP {
@@ -211,6 +212,7 @@ firewall {
                 then {
                     forwarding-class VOIP;
                     dscp ef;
+                    loss-priority low;
                     accept;
                 }
             }
@@ -226,6 +228,7 @@ firewall {
                 then {
                     forwarding-class Critical;
                     dscp af31;
+                    loss-priority low;
                     accept;
                 }
             }
@@ -241,6 +244,7 @@ firewall {
                 then {
                     forwarding-class MM;
                     dscp af41;
+                    loss-priority medium-high;
                     accept;
                 }
             }
@@ -256,6 +260,7 @@ firewall {
                 then {
                     forwarding-class JUNK;
                     dscp cs1;
+                    loss-priority high;
                     accept;
                 }
             }
