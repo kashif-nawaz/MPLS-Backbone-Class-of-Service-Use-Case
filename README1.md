@@ -137,10 +137,10 @@ class-of-service {
 scheduler-maps {
     SM_COS {
         forwarding-class BE scheduler SCH_BE;
-        forwarding-class CRITICAL scheduler SCH-CRITICAL;
+        forwarding-class CRITICAL scheduler SCH_CRITICAL;
         forwarding-class NC scheduler SCH_NC;
         forwarding-class JUNK scheduler SCH_JUNK;
-        forwarding-class MM scheduler SCH-MM;
+        forwarding-class MM scheduler SCH_MM;
         forwarding-class VOIP scheduler SCH_VOIP;
     }
 }
@@ -164,7 +164,7 @@ schedulers {
         buffer-size percent 5;
         priority low;
     }
-    SCH-MM {
+    SCH_MM {
         transmit-rate percent 5;
         buffer-size percent 5;
         priority high;
