@@ -6,7 +6,7 @@ https://github.com/kashif-nawaz/MPLS-Backbone-Class-Of-Service-Design-Principles
 ## Use Case Requirments 
 Designing and deploying Class of Service (CoS) in an MPLS backbone network is inherently more complex than in a pure IP or switching network. In an MPLS architecture, ingress Label Switch Routers (LSRs) classify traffic by analyzing packet characteristics at ingress interfaces, utilizing either multifield classification or behavior aggregate classification. This classification enables appropriate queuing of traffic through designated forwarding queues at egress interfaces. At the egress interfaces of the ingress LSP, the EXP bits are written to ensure that transit LSRs can classify packets based on these bits and forward them through the appropriate forwarding queues. Subsequently, the EXP bits must be rewritten again so that the next LSR or egress LSR can classify packets using the EXP classifier. 
 
-Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface via IP lookup. At this stage, it may be necessary to rewrite the Differentiated Services Code Point (DSCP) bits to maintain consistent traffic classification and prioritization at the CE routers.
+Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface through an IP lookup. At this stage, rewriting the Differentiated Services Code Point (DSCP) bits may or may not be necessary; if DSCP bits have already been set, they will be preserved throughout the packet's journey unless modified by a transit device.
 
 ## DSCP to EXP Mapping 
 As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values). Although IETF RFC 4594 describes 21 DSCP values but Junos has adapted 2 additional values i.e CS1 (defined in RFC 2474) and CS6  (defined in RFC 2474) 
@@ -57,7 +57,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 
 ### SCHEME for DSCP to EXP  Bit pattern Mapping 
 
-The three most significant bits (MSBs) of the DSCP alias code will be used to represent the EXP alias code. This mapping allows the 23 DSCP alias codes to correspond to 10 EXP alias codes.
+There is no strict rule for DSCP-to-EXP bit mapping; however, we can use the three most significant bits (MSBs) of the DSCP alias code to map it to the corresponding EXP alias where the 3 MSBs match. This approach allows the 23 DSCP alias codes to be effectively mapped to 10 EXP alias codes. 
 
 | DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 | ---------------|-----------------|----------------|----------------|
