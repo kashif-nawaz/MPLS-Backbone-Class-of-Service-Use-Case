@@ -121,12 +121,12 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 ```
 class-of-service {
 forwarding-classes {
-    class BEST-EFFORT queue-num 0;
-    class MISSION-CRITICAL queue-num 2;
-    class NETWORK-CONTROL queue-num 3;
-    class SCAVENGER queue-num 5;
-    class VIDEO queue-num 4;
-    class VOICE queue-num 1;
+    class BEqueue-num 0;
+    class CRITICAL queue-num 2;
+    class NC queue-num 3;
+    class JUNK queue-num 5;
+    class MM queue-num 4;
+    class VOIP queue-num 1;
 }
 }
 ```
@@ -135,41 +135,41 @@ forwarding-classes {
 ```
 class-of-service {
 scheduler-maps {
-    SM-COS {
-        forwarding-class BEST-EFFORT scheduler SC-BEST-EFFORT;
-        forwarding-class MISSION-CRITICAL scheduler SC-MISSION-CRITICAL;
-        forwarding-class NETWORK-CONTROL scheduler SC-NETWORK-CONTROL;
-        forwarding-class SCAVENGER scheduler SC-SCAVENGER;
-        forwarding-class VIDEO scheduler SC-VIDEO;
-        forwarding-class VOICE scheduler SC-VOICE;
+    SM_COS {
+        forwarding-class BE scheduler SCH_BE;
+        forwarding-class CRITICAL scheduler SCH-CRITICAL;
+        forwarding-class NC scheduler SCH_NC;
+        forwarding-class JUNK scheduler SCH_JUNK;
+        forwarding-class MM scheduler SCH-MM;
+        forwarding-class VOIP scheduler SCH_VOIP;
     }
 }
 schedulers {
-    SC-BEST-EFFORT {
+    SCH_BE {
         transmit-rate percent 70;
         buffer-size percent 70;
         priority low;
     }
-    SC-MISSION-CRITICAL {
+    SCH_CRITICAL {
         transmit-rate percent 5;
         buffer-size percent 5;
         priority high;
     }
-    SC-NETWORK-CONTROL {
+    SCH_NC {
         buffer-size percent 5;
         priority strict-high;
     }
-    SC-SCAVENGER {
+    SCH_JUNK {
         transmit-rate percent 5;
         buffer-size percent 5;
         priority low;
     }
-    SC-VIDEO {
+    SCH-MM {
         transmit-rate percent 5;
         buffer-size percent 5;
         priority high;
     }
-    SC-VOICE {
+    SCH_VOIP {
         buffer-size percent 10;
         priority high;
     }
@@ -209,7 +209,7 @@ firewall {
                     }
                 }
                 then {
-                    forwarding-class VOICE;
+                    forwarding-class VOIP;
                     dscp ef;
                     accept;
                 }
@@ -270,22 +270,22 @@ class-of-service {
 classifiers {
     dscp CL-COS {
         import default;
-        forwarding-class BEST-EFFORT {
+        forwarding-class BE{
             loss-priority low code-points be;
         }
-        forwarding-class MISSION-CRITICAL {
+        forwarding-class CRITICAL {
             loss-priority low code-points af31;
         }
-        forwarding-class NETWORK-CONTROL {
+        forwarding-class NC {
             loss-priority low code-points nc1;
         }
-        forwarding-class SCAVENGER {
+        forwarding-class JUNK {
             loss-priority low code-points cs1;
         }
-        forwarding-class VIDEO {
+        forwarding-class MM {
             loss-priority low code-points af41;
         }
-        forwarding-class VOICE {
+        forwarding-class VOIP {
             loss-priority low code-points ef;
         }
     }
@@ -297,24 +297,24 @@ classifiers {
 ```
 class-of-service {
 rewrite-rules {
-    exp DSCP-EXP-REWRITE {
+    exp DSCP_EXP_REWRITE {
         import default;
-        forwarding-class BEST-EFFORT {
+        forwarding-class BE{
             loss-priority low code-point be;
         }
-        forwarding-class MISSION-CRITICAL {
+        forwarding-class CRITICAL {
             loss-priority low code-point ef1;
         }
-        forwarding-class NETWORK-CONTROL {
+        forwarding-class NC {
             loss-priority low code-point nc1;
         }
-        forwarding-class SCAVENGER {
+        forwarding-class JUNK {
             loss-priority low code-point be1;
         }
-        forwarding-class VIDEO {
+        forwarding-class MM {
             loss-priority low code-point af11;
         }
-        forwarding-class VOICE {
+        forwarding-class VOIP {
             loss-priority low code-point af12;
         }
     }
@@ -324,21 +324,21 @@ rewrite-rules {
 ## EXP Classfier
 ```
 class-of-service {
-    exp CL-EXP-COS {
+    exp CL_EXP_COS {
         import default;
-        forwarding-class BEST-EFFORT {
+        forwarding-class BE{
             loss-priority low code-points be;
         }
-        forwarding-class NETWORK-CONTROL {
+        forwarding-class NC {
             loss-priority low code-points nc1;
         }
-        forwarding-class SCAVENGER {
+        forwarding-class JUNK {
             loss-priority low code-points be1;
         }
-        forwarding-class VIDEO {
+        forwarding-class MM {
             loss-priority low code-points af11;
         }
-        forwarding-class VOICE {
+        forwarding-class VOIP {
             loss-priority low code-points af12;
         }
     }
@@ -351,38 +351,38 @@ class-of-service {
 class-of-service {
 interfaces {
     et-* {
-        scheduler-map SM-COS;
+        scheduler-map SM_COS;
         unit * {
             classifiers {
                 dscp CL-COS;
-                exp CL-EXP-COS;
+                exp CL_EXP_COS;
             }
             rewrite-rules {
-                exp DSCP-EXP-REWRITE;
+                exp DSCP_EXP_REWRITE;
             }
         }
     }
     xe-* {
-        scheduler-map SM-COS;
+        scheduler-map SM_COS;
         unit * {
             classifiers {
                 dscp CL-COS;
-                exp CL-EXP-COS;
+                exp CL_EXP_COS;
             }
             rewrite-rules {
-                exp DSCP-EXP-REWRITE;
+                exp DSCP_EXP_REWRITE;
             }
         }
     }
     ae* {
-        scheduler-map SM-COS;
+        scheduler-map SM_COS;
         unit * {
             classifiers {
                 dscp CL-COS;
-                exp CL-EXP-COS;
+                exp CL_EXP_COS;
             }
             rewrite-rules {
-                exp DSCP-EXP-REWRITE;
+                exp DSCP_EXP_REWRITE;
             }
         }
     }
