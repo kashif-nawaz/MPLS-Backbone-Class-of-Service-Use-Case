@@ -8,7 +8,9 @@ Designing and deploying Class of Service (CoS) in an MPLS backbone network is in
 
 Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface through an IP lookup. At this stage, rewriting the Differentiated Services Code Point (DSCP) bits may or may not be necessary; if DSCP bits have already been set, they will be preserved throughout the packet's journey unless modified by a transit device.
 
-## Defination
+## Important Terms & Defination
+Before delving into details, it's essential to understand a few key concepts. In the following text, I’ll be focusing on platforms based on the Juniper BT/Express-4 and Juniper Trio chipsets. Specifications may differ for other platforms
+
 ### Commited Information Rate (CIR)
 Configured tranmit-rate for any queueu is also know as Commited Information Rate (CIR). 
 
