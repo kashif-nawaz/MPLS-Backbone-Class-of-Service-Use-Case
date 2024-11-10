@@ -8,6 +8,48 @@ Designing and deploying Class of Service (CoS) in an MPLS backbone network is in
 
 Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface through an IP lookup. At this stage, rewriting the Differentiated Services Code Point (DSCP) bits may or may not be necessary; if DSCP bits have already been set, they will be preserved throughout the packet's journey unless modified by a transit device.
 
+## Defination
+### Commited Information Rate (CIR)
+Configured tranmit-rate for any queueu is also know as Commited Information Rate (CIR). 
+
+### Guaranteed Region 
+If a queue does not exceed its configured transmit rate, it is considered to be operating within the guaranteed region. Queues operating in this region should not experience any traffic drops.
+### Excess Region 
+Once a queue's offered rate  exceeds the configured transmit rate, it enters the excess region. Queues operating in the excess region behave differently on the MX and PTX platforms.
+* On the MX platform, which is built with the Trio chipset, strict-high and high priority queues are assigned to the "excess-high" priority in the excess region. In contrast, medium and low priority queues are assigned to the "excess-low" priority. The excess priority is a configurable parameter.
+
+* The PTX platform, which utilizes the Express-4 or BT chipset, assigns "excess" priority to all queues operating in the excess region.
+
+### Excess Bandwidth 
+When two or more queues operate above their configured transmit rate (i.e., in the excess region) while the total bandwidth utilization of the interface remains below its allowed line rate, these queues will compete for the remaining available bandwidth, referred to as excess bandwidth. The following rules govern the distribution of excess bandwidth among queues in the excess region:-
+* Excess bandwidth allocation will be based on the configured value of the excess rate.
+* If the excess rate is configured for some queues but not for others, the queues without a configured excess rate will receive an excess rate of 1.
+* If no queues have an excess rate configured, the configured transmit rate will be used to calculate the excess rate.
+In platforms with the Trio or BX chipset (noting that the Express-5 is not deployed in Tesla), queues configured with a high scheduler priority will be served by the excess-high (EH) priority in the excess region. Conversely, queues configured with medium or low scheduler priority will be served by the excess-low (EL) priority. EH will take precedence over EL, and EL will only be served if there is leftover bandwidth from EH. In Trio or BX chipsets, the values for excess-low and excess-high are configurable.
+
+### Temporal Buffer
+Every network vendor provides temporal buffer which helps  to alleviate congestion and enhance the overall performance of the network by temporarily storing packets during peak loads or when there are bursts of traffic. The temporal buffer dynamically allocates memory to accommodate incoming packets based on current traffic conditions. This allows for more efficient handling of transient traffic spikes.In Junos, the temporal buffer is configurable for each queue via the buffer-size parameter.  We can calculate absolute value of buffer size for a physical interface using following formula. 
+* Buffer-Size=Interface speed * temporal buffer value in milli seconds
+* Min Buffer Size = Interface Buffer-Size * 0.1% 
+
+Let's Consider an example with the Juniper BT / Express-4 chipset, which has a temporal buffer of 25 ms. Let's calculate the buffer memory available for a 100G interface. Juniper Trio chipset has 100ms temportal buffer.
+
+* Interface speed is 100Gbps 
+* Temporal Buffer value is 25ms
+* Interface Buffer Size=100Gbps*25ms
+* Covert ms into seconds ,  25ms=0.025seconds
+* 100Gbps×0.025seconds=2.5gigabits
+* 2.5gigabits=2.5×1,000,000,000bits=2,500,000,000 bits = 312,500,000bytes
+
+Once the total buffer memory available for an interface is known, we can easily calculate the queue depth in bytes based on the configured buffer size.  Suppose that on a Juniper BT / Express-4 chipset, a 100G interface has a total buffer memory of 312,500,000 bytes, and the configured buffer size for a specific queue is set to 28 percent. We can calculate the available buffer memory for this queue as follows:
+
+* Available Buffer Memory = Total Buffer Memory × Buffer Size Percentage
+* Using this formula, we find that:
+    Available Buffer Memory =312,500,000× 0.28 = 87,500,000 bytes
+
+
+ 
+
 ## DSCP to EXP Mapping 
 As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values). Although IETF RFC 4594 describes 21 DSCP values but Junos has adapted 2 additional values i.e CS1 (defined in RFC 2474) and CS6  (defined in RFC 2474) 
 
