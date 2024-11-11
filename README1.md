@@ -11,24 +11,20 @@ Once traffic enters the egress LSR, the MPLS label is removed, and the traffic i
 ## Important Terms & Defination
 Before delving into details, it's essential to understand a few key concepts. In the following text, I’ll be focusing on platforms based on the Juniper BT/Express-4 and Juniper Trio chipsets. Specifications may differ for other platforms
 
-### Commited Information Rate (CIR)
-Configured tranmit-rate for any queueu is also know as Commited Information Rate (CIR). 
+### Schduling Priority
 
-### Guaranteed Region 
-If a queue does not exceed its configured transmit rate, it is considered to be operating within the guaranteed region. Queues operating in this region should not experience any traffic drops.
-### Excess Region 
-Once a queue's offered rate  exceeds the configured transmit rate, it enters the excess region. Queues operating in the excess region behave differently on the MX and PTX platforms.
-* On the MX platform, which is built with the Trio chipset, strict-high and high priority queues are assigned to the "excess-high" priority in the excess region. In contrast, medium and low priority queues are assigned to the "excess-low" priority. The excess priority is a configurable parameter.
+Junos devices can be configured to operate in strict priority scheduling, where forwarding queues are allocated transmission resources based on their priority levels (e.g., strict-high, high, medium-high, medium-low, and low). In the normal priority scheduling mode (Junos default), only the strict-high priority queue can consume unlimited transmission resources (subject to the physical interface’s resources). This behavior can be adjusted by applying a rate-limit to the strict-high queue’s transmission rate. Only one queue can be designated as strict-high priority within each scheduler. In normal scheduling mode, however, scheduler priority behavior may vary across different platform architectures.
 
-* The PTX platform, which utilizes the Express-4 or BT chipset, assigns "excess" priority to all queues operating in the excess region.
+In the Juniper BT (Express-4), Trio, and BX (Express-5) chipsets, all queues receive their configured transmit-rate or Committed Information Rate (CIR) bandwidth. If a queue’s traffic remains within this configured transmit rate, it is considered to be operating within the guaranteed region and should not experience any traffic drops. When a queue's offered rate exceeds the configured transmit rate, it enters the excess region.
 
-### Excess Bandwidth 
-When two or more queues operate above their configured transmit rate (i.e., in the excess region) while the total bandwidth utilization of the interface remains below its allowed line rate, these queues will compete for the remaining available bandwidth, referred to as excess bandwidth. The following rules govern the distribution of excess bandwidth among queues in the excess region:-
-* Excess bandwidth allocation will be based on the configured value of the excess rate.
-* If the excess rate is configured for some queues but not for others, the queues without a configured excess rate will receive an excess rate of 1.
+In Juniper Trio  and BX (Express-5) chipsets, strict-high and high-priority queues are assigned the "excess-high" (EH) priority in the excess region, while medium and low-priority queues are assigned the "excess-low" (EL) priority. EH traffic is served before EL traffic, and EL traffic is only served if there is available bandwidth after EH demands are met. In both Trio and BX chipsets, the values for excess-priority are configurable to excess-low and excess-high. On the BT (Express-4) chipset, however, all queues operating in the excess region are given equal priority, known as "excess."
+
+#### Excess Bandwidth 
+When two or more queues operate above their configured transmit rate (i.e., in the excess region) while the total bandwidth utilization of the interface remains below its allowed line rate, these queues will compete for the remaining available bandwidth, referred to as excess-bandwidth. The following rules govern the distribution of excess-bandwidth among queues in the excess region:-
+* Excess bandwidth allocation will be based on the configured value of the excess-rate.
+* If the excess-rate is configured for some queues but not for others, the queues without a configured excess rate will receive an excess rate of 1.
 * If no queues have an excess rate configured, the configured transmit rate will be used to calculate the excess rate.
-
-In Juniper Trio platfrom, queues configured with a high scheduler priority will be served by the excess-high (EH) priority in the excess region. Conversely, queues configured with medium or low scheduler priority will be served by the excess-low (EL) priority. EH will take precedence over EL, and EL will only be served if there is leftover bandwidth from EH. In Trio or BX chipsets, the values for excess-low and excess-high are configurable.
+* In Juniper Trio  and BX (Express-5) chipsets EH traffic is served before EL traffic.
 
 ### Temporal Buffer
 Every network vendor provides temporal buffer which helps  to alleviate congestion and enhance the overall performance of the network by temporarily storing packets during peak loads or when there are bursts of traffic. The temporal buffer dynamically allocates memory to accommodate incoming packets based on current traffic conditions. This allows for more efficient handling of transient traffic spikes.In Junos, the temporal buffer is configurable for each queue via the buffer-size parameter.  We can calculate absolute value of buffer size for a physical interface using following formula. 
@@ -49,9 +45,6 @@ Once the total buffer memory available for an interface is known, we can easily 
 * Available Buffer Memory = Total Buffer Memory × Buffer Size Percentage
 * Using this formula, we find that:
     Available Buffer Memory =312,500,000× 0.28 = 87,500,000 bytes
-
-
- 
 
 ## DSCP to EXP Mapping 
 As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values). Although IETF RFC 4594 describes 21 DSCP values but Junos has adapted 2 additional values i.e CS1 (defined in RFC 2474) and CS6  (defined in RFC 2474) 
@@ -99,9 +92,7 @@ As mentioned above, at the ingress LSR, egress packets need to have the MPLS hea
 |  nc1      |   110      |      
 |  nc2      |   111      |
 
-
 ### SCHEME for DSCP to EXP  Bit pattern Mapping 
-
 There is no strict rule for DSCP-to-EXP bit mapping; however, we can use the three most significant bits (MSBs) of the DSCP alias code to map it to the corresponding EXP alias where the 3 MSBs match. This approach allows the 23 DSCP alias codes to be effectively mapped to 10 EXP alias codes. 
 
 | DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
@@ -130,7 +121,6 @@ There is no strict rule for DSCP-to-EXP bit mapping; however, we can use the thr
 |  nc1           | 110000          | nc1            |     110        |
 |  nc2           | 111000          | nc2            |     111        |
 
-
 ### Forwarding Classes Resources Mapping
 |Forwarding Class| DSCP Alias     | DSCP Bit pattern|Queue Number    | Transmit Rate   | Prioirty       | Buffer Size    | Remarks           |
 |----------------| ---------------|-----------------|----------------|-----------------|----------------|----------------|-------------------|
@@ -141,7 +131,6 @@ There is no strict rule for DSCP-to-EXP bit mapping; however, we can use the thr
 | MM             |  af41          | 100010          | 4              | 10              | Medimum-Low    |     10         | Multimedia        |
 | JUNK           |  cs1           | 001000          | 5              | 2               | Low            |     1          | Remaining traffic |
 
-
 ### DSCP to EXP Bit pattern Mapping 
 |Forwarding Class| DSCP Alias     | DSCP Bit pattern| EXP Alias      | EXP Bit pattern|
 |----------------| ---------------|-----------------|----------------|----------------|
@@ -151,9 +140,6 @@ There is no strict rule for DSCP-to-EXP bit mapping; however, we can use the thr
 | NC             |  nc1           | 110000          | nc1            |     110        |
 | MM             |  af41          | 100010          | af11           |     100        |
 | JUNK           |  cs1           | 001000          | be1            |     001        |
-
-
-
 
 ## Forwarding Classes Defination
 ```
