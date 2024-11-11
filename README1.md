@@ -1,21 +1,16 @@
-# MPLS-Backbone-Class-of-Service-Use-Case
-
-## Reference Document 
-https://github.com/kashif-nawaz/MPLS-Backbone-Class-Of-Service-Design-Principles
-
-## Use Case Requirments 
+# Wholistic Approch for MPLS Backbone Class of Service (CoS)
+## Preamble  
 Designing and deploying Class of Service (CoS) in an MPLS backbone network is inherently more complex than in a pure IP or switching network. In an MPLS architecture, ingress Label Switch Routers (LSRs) classify traffic by analyzing packet characteristics at ingress interfaces, utilizing either multifield classification or behavior aggregate classification. This classification enables appropriate queuing of traffic through designated forwarding queues at egress interfaces. At the egress interfaces of the ingress LSP, the EXP bits are written to ensure that transit LSRs can classify packets based on these bits and forward them through the appropriate forwarding queues. Subsequently, the EXP bits must be rewritten again so that the next LSR or egress LSR can classify packets using the EXP classifier. 
 
 Once traffic enters the egress LSR, the MPLS label is removed, and the traffic is forwarded to the Customer Edge (CE) facing interface through an IP lookup. At this stage, rewriting the Differentiated Services Code Point (DSCP) bits may or may not be necessary; if DSCP bits have already been set, they will be preserved throughout the packet's journey unless modified by a transit device.
 
 ## Important Terms & Defination
-Before delving into details, it's essential to understand a few key concepts. In the following text, I’ll be focusing on platforms based on the Juniper BT/Express-4 and Juniper Trio chipsets. Specifications may differ for other platforms
+Before delving into details, it's essential to understand a few key concepts. In the following text, I’ll be focusing on platforms based on the Juniper BT/{Express-4) , Juniper Trio  and Juniper BX (Express-5) chipsets. Specifications may differ for other platforms
 
 ### Schduling Priority
-
 Junos devices can be configured to operate in strict priority scheduling, where forwarding queues are allocated transmission resources based on their priority levels (e.g., strict-high, high, medium-high, medium-low, and low). In the normal priority scheduling mode (Junos default), only the strict-high priority queue can consume unlimited transmission resources (subject to the physical interface’s resources). This behavior can be adjusted by applying a rate-limit to the strict-high queue’s transmission rate. Only one queue can be designated as strict-high priority within each scheduler. In normal scheduling mode, however, scheduler priority behavior may vary across different platform architectures.
 
-In the Juniper BT (Express-4), Trio, and BX (Express-5) chipsets, all queues receive their configured transmit-rate or Committed Information Rate (CIR) bandwidth. If a queue’s traffic remains within this configured transmit rate, it is considered to be operating within the guaranteed region and should not experience any traffic drops. When a queue's offered rate exceeds the configured transmit rate, it enters the excess region.
+In the Juniper BT (Express-4), Trio, and BX (Express-5) chipsets, all queues receive their configured transmit-rate or Committed Information Rate (CIR) bandwidth. If a queue’s traffic remains within it configured transmit-rate, it is considered to be operating within the guaranteed region and should not experience any traffic drops. When a queue's offered rate exceeds the configured transmit-rate, it enters the excess region.
 
 In Juniper Trio  and BX (Express-5) chipsets, strict-high and high-priority queues are assigned the "excess-high" (EH) priority in the excess region, while medium and low-priority queues are assigned the "excess-low" (EL) priority. EH traffic is served before EL traffic, and EL traffic is only served if there is available bandwidth after EH demands are met. In both Trio and BX chipsets, the values for excess-priority are configurable to excess-low and excess-high. On the BT (Express-4) chipset, however, all queues operating in the excess region are given equal priority, known as "excess."
 
@@ -24,7 +19,12 @@ When two or more queues operate above their configured transmit rate (i.e., in t
 * Excess bandwidth allocation will be based on the configured value of the excess-rate.
 * If the excess-rate is configured for some queues but not for others, the queues without a configured excess rate will receive an excess rate of 1.
 * If no queues have an excess rate configured, the configured transmit rate will be used to calculate the excess rate.
-* In Juniper Trio  and BX (Express-5) chipsets EH traffic is served before EL traffic.
+* In Juniper Trio  and BX (Express-5) chipsets EH traffic is served before EL traffic. 
+
+#### Weighted Round Robin (WRR) 
+In normal priority scheduling, each queue receives transmission resources according to its configured transmit-rate and buffer-size. If there is any excess bandwidth remaining after serving all queues, this bandwidth is distributed among the queues based on a weighted allocation. This distribution process is called Weighted Round Robin (WRR). In WRR, each forwarding queue is served in a round-robin fashion, but with weights applied according to their assigned resources, allowing for proportional distribution based on priority and resource allocation.
+
+This WRR method ensures that higher-priority or resource-intensive queues get a larger share of any leftover bandwidth, while lower-priority queues are still guaranteed their minimum resources, enhancing overall fairness and efficient use of network capacity. 
 
 ### Temporal Buffer
 Every network vendor provides temporal buffer which helps  to alleviate congestion and enhance the overall performance of the network by temporarily storing packets during peak loads or when there are bursts of traffic. The temporal buffer dynamically allocates memory to accommodate incoming packets based on current traffic conditions. This allows for more efficient handling of transient traffic spikes.In Junos, the temporal buffer is configurable for each queue via the buffer-size parameter.  We can calculate absolute value of buffer size for a physical interface using following formula. 
@@ -45,6 +45,10 @@ Once the total buffer memory available for an interface is known, we can easily 
 * Available Buffer Memory = Total Buffer Memory × Buffer Size Percentage
 * Using this formula, we find that:
     Available Buffer Memory =312,500,000× 0.28 = 87,500,000 bytes
+
+### Tail Drop vs RED Drop
+Temporal buffer effectively manages bursty traffic by providing temporary storage for transient packets until transmission resources become available. If transmission resources are unavailable after the temporal buffer is filled, new packets will begin to drop, a phenomenon known as "tail drop". Junos does support  Random Early Detection (RED) , a proactive congestion control mechanism that begins to drop packets before the queue is full. 
+
 
 ## DSCP to EXP Mapping 
 As mentioned above, at the ingress LSR, egress packets need to have the MPLS header's EXP bits written. At the ingress interfaces of the ingress LSR, packets may already have DSCP markings applied from a downstream network or at the host level. This raises the question of how DSCP values will be mapped to EXP bits, given that DSCP has 6 bits (allowing for 64 distinct values) while EXP has only 3 bits (which can represent 8 distinct values). Although IETF RFC 4594 describes 21 DSCP values but Junos has adapted 2 additional values i.e CS1 (defined in RFC 2474) and CS6  (defined in RFC 2474) 
@@ -427,4 +431,5 @@ interfaces {
 }
 ```
 
-
+## Conclusion
+Designing and deploying Class of Service (CoS) in an MPLS backbone network is indeed complex. However, implementing it with careful consideration of factors like queue prioritization, buffer management, and scheduling policies can significantly improve performance in congested backbone networks. By aligning CoS configurations with network traffic patterns and business priorities, you can help ensure efficient bandwidth utilization, reduced latency for critical traffic, and overall smoother traffic flow across the network.
